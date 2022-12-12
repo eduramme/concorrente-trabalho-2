@@ -47,14 +47,18 @@ class PaymentProcessor(Thread):
         queue = banks[self.bank._id].transaction_queue
 
         while True:
-            try:
-                transaction = queue.pop()
-                LOGGER.info(f"Transaction_queue do Banco {self.bank._id}: {queue}")
-            except Exception as err:
-                LOGGER.error(f"Falha em PaymentProcessor.run(): {err}")
-            else:
-                self.process_transaction(transaction)
-            time.sleep(3 * time_unit)  # Remova esse sleep após implementar sua solução!
+            with lock:
+                try:
+                    if (queue == []):
+                        print("================ Fila vazia: wait ================")
+                        transacao_na_fila.wait()
+                    transaction = queue.pop()
+                    LOGGER.info(f"Transaction_queue do Banco {self.bank._id}: {queue}")
+                except Exception as err:
+                    LOGGER.error(f"Falha em PaymentProcessor.run(): {err}")
+                else:
+                    self.process_transaction(transaction)
+                # time.sleep(3 * time_unit)  # Remova esse sleep após implementar sua solução!
 
         LOGGER.info(f"O PaymentProcessor {self._id} do banco {self._bank_id} foi finalizado.")
 
