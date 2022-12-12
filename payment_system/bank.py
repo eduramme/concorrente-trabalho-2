@@ -47,8 +47,15 @@ class Bank():
         self.operating          = False
         self.accounts           = []
         self.transaction_queue  = []
+
+        # lock for queues
         self.lock               = Lock()
         self.transacao_na_fila  = Condition(self.lock)
+
+        # bank info
+        self.lock_transferencias_int = Lock()
+        self.transferencias_nac = 0 #proteger essas áreas do código na hora de incrementar
+        self.transferencias_int = 0
 
 
     def new_account(self, balance: int = 0, overdraft_limit: int = 0) -> None:

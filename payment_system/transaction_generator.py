@@ -51,20 +51,18 @@ class TransactionGenerator(Thread):
 
         i = 0
         while True:
+            origin = (self.bank._id, self._id)
+            destination_bank = randint(0, 5)
+            destination = (destination_bank, randint(0, 100))
+            amount = randint(100, 1000000)
+            new_transaction = Transaction(i, origin, destination, amount, currency=Currency(destination_bank+1))
             with lock:
-                origin = (self.bank._id, self._id)
-                destination_bank = randint(0, 5)
-                destination = (destination_bank, randint(0, 100))
-                amount = randint(100, 1000000)
-                new_transaction = Transaction(i, origin, destination, amount, currency=Currency(destination_bank+1))
-
                 # coloca na fila das transações
                 banks[self.bank._id].transaction_queue.append(new_transaction)
-                
-                i=+1
-                time.sleep(3 * time_unit)
                 transacao_na_fila.notify()
-                print(f"================ Transação gerada: {self.bank._id} ================")
+            i=+1
+            time.sleep(0.3 * time_unit)
+            print(f"================ Transação gerada: {self.bank._id} ================")
 
         LOGGER.info(f"O TransactionGenerator {self._id} do banco {self.bank._id} foi finalizado.")
 

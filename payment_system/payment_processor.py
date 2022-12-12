@@ -49,19 +49,21 @@ class PaymentProcessor(Thread):
         transacao_na_fila = banks[self.bank._id].transacao_na_fila
 
         while True:
-            with lock:
-                try:
-                    # retira da fila de transações
+            transaction = None
+            try:
+                # retira da fila de transações
+                with lock:
                     if (queue == []):
                         print("================ Fila vazia: wait ================")
                         transacao_na_fila.wait()
-                    transaction = queue.pop()
-                    LOGGER.info(f"Transaction_queue do Banco {self.bank._id}: {queue}")
-                except Exception as err:
-                    LOGGER.error(f"Falha em PaymentProcessor.run(): {err}")
-                else:
-                    self.process_transaction(transaction)
-                # time.sleep(3 * time_unit)  # Remova esse sleep após implementar sua solução!
+                    transaction = queue.pop(-1)
+                LOGGER.info(f"Transaction_queue do Banco {self.bank._id}: {queue}")
+            except Exception as err:
+                LOGGER.error(f"Falha em PaymentProcessor.run(): {err}")
+            else:
+
+                self.process_transaction(transaction)
+            # time.sleep(3 * time_unit)  # Remova esse sleep após implementar sua solução!
 
         LOGGER.info(f"O PaymentProcessor {self._id} do banco {self._bank_id} foi finalizado.")
 
@@ -76,11 +78,14 @@ class PaymentProcessor(Thread):
         """
         # TODO: IMPLEMENTE/MODIFIQUE O CÓDIGO NECESSÁRIO ABAIXO !
 
+        # qunado for modificar, protger com um lock cada conta
+        # checkar a ordem dos locks nas contas
+
         LOGGER.info(f"PaymentProcessor {self._id} do Banco {self.bank._id} iniciando processamento da Transaction {transaction._id}!")
         
         # NÃO REMOVA ESSE SLEEP!
         # Ele simula uma latência de processamento para a transação.
-        time.sleep(3 * time_unit)
+        time.sleep(0.3 * time_unit)
 
         transaction.set_status(TransactionStatus.SUCCESSFUL)
         return transaction.status
