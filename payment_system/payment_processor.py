@@ -45,10 +45,13 @@ class PaymentProcessor(Thread):
 
         LOGGER.info(f"Inicializado o PaymentProcessor {self._id} do Banco {self.bank._id}!")
         queue = banks[self.bank._id].transaction_queue
+        lock = banks[self.bank._id].lock
+        transacao_na_fila = banks[self.bank._id].transacao_na_fila
 
         while True:
             with lock:
                 try:
+                    # retira da fila de transações
                     if (queue == []):
                         print("================ Fila vazia: wait ================")
                         transacao_na_fila.wait()

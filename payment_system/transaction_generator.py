@@ -45,9 +45,12 @@ class TransactionGenerator(Thread):
         LOGGER.info(f"Inicializado TransactionGenerator para o Banco Nacional {self.bank._id}!")
 
         operating = banks[self.bank._id].operating
+        lock = banks[self.bank._id].lock
+        transacao_na_fila = banks[self.bank._id].transacao_na_fila
+
 
         i = 0
-        while operating:
+        while True:
             with lock:
                 origin = (self.bank._id, self._id)
                 destination_bank = randint(0, 5)
@@ -55,7 +58,7 @@ class TransactionGenerator(Thread):
                 amount = randint(100, 1000000)
                 new_transaction = Transaction(i, origin, destination, amount, currency=Currency(destination_bank+1))
 
-
+                # coloca na fila das transações
                 banks[self.bank._id].transaction_queue.append(new_transaction)
                 
                 i=+1

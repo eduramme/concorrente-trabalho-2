@@ -1,4 +1,5 @@
 from typing import Tuple
+from threading import Thread, Condition, Lock
 
 from payment_system.account import Account, CurrencyReserves
 from utils.transaction import Transaction
@@ -46,6 +47,8 @@ class Bank():
         self.operating          = False
         self.accounts           = []
         self.transaction_queue  = []
+        self.lock               = Lock()
+        self.transacao_na_fila  = Condition(self.lock)
 
 
     def new_account(self, balance: int = 0, overdraft_limit: int = 0) -> None:

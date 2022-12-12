@@ -13,6 +13,6 @@ total_time = 1000
 # Unidade de tempo (quanto menor, mais rápida a simulação)
 time_unit = 0.1  # 0.1 = 100ms
 
-#locks
-lock = Lock()
-transacao_na_fila = Condition(lock)
+# #locks
+# lock = Lock()
+# transacao_na_fila = Condition(lock)
