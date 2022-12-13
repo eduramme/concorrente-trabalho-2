@@ -1,13 +1,14 @@
 import argparse, time, sys
 from logging import INFO, DEBUG
 from random import randint
-
+from datetime import datetime, timedelta
 from globals import *
 from payment_system.bank import Bank
 from payment_system.payment_processor import PaymentProcessor
 from payment_system.transaction_generator import TransactionGenerator
 from utils.currency import Currency
 from utils.logger import CH, LOGGER
+import threading
 
 
 if __name__ == "__main__":
@@ -51,12 +52,15 @@ if __name__ == "__main__":
         bank = Bank(_id=i, currency=currency)
         
         # Deposita valores aleatórios nas contas internas (reserves) do banco
-        bank.reserves.BRL.deposit(randint(100_000_000, 10_000_000_000))
-        bank.reserves.CHF.deposit(randint(100_000_000, 10_000_000_000))
-        bank.reserves.EUR.deposit(randint(100_000_000, 10_000_000_000))
-        bank.reserves.GBP.deposit(randint(100_000_000, 10_000_000_000))
-        bank.reserves.JPY.deposit(randint(100_000_000, 10_000_000_000))
-        bank.reserves.USD.deposit(randint(100_000_000, 10_000_000_000))
+        bank.reserves.BRL.deposit(10)
+        bank.reserves.CHF.deposit(10)
+        bank.reserves.EUR.deposit(10)
+        bank.reserves.GBP.deposit(10)
+        bank.reserves.JPY.deposit(10)
+        bank.reserves.USD.deposit(10)
+
+        for i in range(0, 10):
+            bank.new_account(100, 200)
         
         # Adiciona banco na lista global de bancos
         banks.append(bank)
@@ -78,8 +82,27 @@ if __name__ == "__main__":
         # Atualiza a variável tempo considerando o intervalo de criação dos clientes:
         t += dt
 
-    # Finaliza todas as threads
-    # TODO
+    for bank in banks:
+        bank.operating = False
+    
+    ending_time = datetime.now()
+
+    # @TODO: Finalizar todas as threads        
 
     # Termina simulação. Após esse print somente dados devem ser printados no console.
     LOGGER.info(f"A simulação chegou ao fim!\n")
+     # status do banco
+    for bank in banks:
+        bank.info()
+
+    transações_não_processadas = 0
+    total_wait_time_seconds = 0
+
+    for bank in banks:
+        transações_não_processadas += len(bank.transaction_queue)
+        for transaction in bank.transaction_queue:
+            total_wait_time_seconds += ((ending_time - transaction.created_at).seconds - 1) #parece que ele arredonda pra cima
+            
+    average_wait_time = total_wait_time_seconds / transações_não_processadas
+    LOGGER.info(f"Tempo médio de espera: {average_wait_time} segundos")
+    LOGGER.info(f"Número total de transações não processadas: {transações_não_processadas}\n")

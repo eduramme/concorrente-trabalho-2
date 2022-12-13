@@ -2,6 +2,9 @@ from dataclasses import dataclass
 
 from utils.currency import Currency
 from utils.logger import LOGGER
+from threading import Thread, Lock, Condition
+from globals import *
+
 
 
 @dataclass
@@ -41,6 +44,8 @@ class Account:
     balance: int = 0
     overdraft_limit: int = 0
 
+    lock_account = Lock()
+
     def info(self) -> None:
         """
         Esse método printa informações gerais sobre a conta bancária.
@@ -59,8 +64,8 @@ class Account:
         PaymentProcessors, então modifique-o para garantir que não ocorram erros de concorrência!
         """
         # TODO: IMPLEMENTE AS MODIFICAÇÕES NECESSÁRIAS NESTE MÉTODO !
-
-        self.balance += amount
+        with self.lock_account:
+            self.balance += amount
         LOGGER.info(f"deposit({amount}) successful!")
         return True
 
@@ -73,21 +78,24 @@ class Account:
         então modifique-o para garantir que não ocorram erros de concorrência!
         """
         # TODO: IMPLEMENTE AS MODIFICAÇÕES NECESSÁRIAS NESTE MÉTODO !
-
-        if self.balance >= amount:
-            self.balance -= amount
-            LOGGER.info(f"withdraw({amount}) successful!")
-            return True
-        else:
-            overdrafted_amount = abs(self.balance - amount)
-            if self.overdraft_limit >= overdrafted_amount:
+        with self.lock_account:
+            if self.balance >= amount:
                 self.balance -= amount
-                LOGGER.info(f"withdraw({amount}) successful with overdraft!")
+                LOGGER.info(f"withdraw({amount}) successful!")
                 return True
             else:
-                LOGGER.warning(f"withdraw({amount}) failed, no balance!")
-                return False
-
+                overdrafted_amount = abs(self.balance - amount)
+                if self.overdraft_limit >= overdrafted_amount:
+                    self.balance -= amount
+                    taxa = amount * 0.05 #calcula a taxa do banco
+                    print(" ======================================================================================== ==================================================== OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOVEEEEEEEEEEEERDRAAAAAAAAAAAAAAAFTTTT")
+                    banks[self._bank_id].reserves.USD.deposit(taxa) #deposita a taxa na conta do banco
+                    LOGGER.info(f"withdraw({amount}) successful with overdraft!")
+                    return True
+                else:
+                    LOGGER.warning(f"withdraw({amount}) failed, no balance!")
+                    return False
+        
 
 @dataclass
 class CurrencyReserves:
@@ -103,3 +111,4 @@ class CurrencyReserves:
     JPY: Account = Account(_id=4, _bank_id=0, currency=Currency.JPY)
     CHF: Account = Account(_id=5, _bank_id=0, currency=Currency.CHF)
     BRL: Account = Account(_id=6, _bank_id=0, currency=Currency.BRL)
+    BAL: Account = Account(_id=6, _bank_id=0, currency=Currency.BRL)

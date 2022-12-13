@@ -4,6 +4,7 @@ from threading import Thread
 from globals import *
 from payment_system.bank import Bank
 from utils.transaction import Transaction, TransactionStatus
+from utils.currency import get_exchange_rate
 from utils.logger import LOGGER
 
 
@@ -44,28 +45,26 @@ class PaymentProcessor(Thread):
         # TODO: IMPLEMENTE/MODIFIQUE O CÓDIGO NECESSÁRIO ABAIXO !
 
         LOGGER.info(f"Inicializado o PaymentProcessor {self._id} do Banco {self.bank._id}!")
-        queue = banks[self.bank._id].transaction_queue
-        lock = banks[self.bank._id].lock
-        transacao_na_fila = banks[self.bank._id].transacao_na_fila
+        queue = self.bank.transaction_queue
+        lock = self.bank.lock
+        transacao_na_fila = self.bank.transacao_na_fila
 
-        while True:
+        while self.bank.operating:
             transaction = None
             try:
-                # retira da fila de transações
-                with lock:
+                with lock: #Critério 1
                     if (queue == []):
-                        print("================ Fila vazia: wait ================")
+                        print("Fila vazia")
                         transacao_na_fila.wait()
                     transaction = queue.pop(-1)
-                LOGGER.info(f"Transaction_queue do Banco {self.bank._id}: {queue}")
+                LOGGER.info(f"Transaction_queue do Banco {self.bank._id}: {len(queue)}")
             except Exception as err:
                 LOGGER.error(f"Falha em PaymentProcessor.run(): {err}")
             else:
-
                 self.process_transaction(transaction)
             # time.sleep(3 * time_unit)  # Remova esse sleep após implementar sua solução!
 
-        LOGGER.info(f"O PaymentProcessor {self._id} do banco {self._bank_id} foi finalizado.")
+        LOGGER.info(f"O PaymentProcessor {self._id} do banco {self.bank._id} foi finalizado.")
 
 
     def process_transaction(self, transaction: Transaction) -> TransactionStatus:
@@ -76,16 +75,30 @@ class PaymentProcessor(Thread):
         aplicada.
         Ela deve retornar o status da transacão processada.
         """
-        # TODO: IMPLEMENTE/MODIFIQUE O CÓDIGO NECESSÁRIO ABAIXO !
+        
+        # TODO: Proteger cada conta com Lock / checkar a ordem desses locks para evitar condição de corrida
 
-        # qunado for modificar, protger com um lock cada conta
-        # checkar a ordem dos locks nas contas
+        conta_origem = banks[transaction.origin[0]].accounts[transaction.origin[1]]
+        banco_origem = banks[transaction.origin[0]]
+        conta_destino = banks[transaction.destination[0]].accounts[transaction.destination[1]]
+
+        if (conta_origem.currency == conta_destino.currency):
+            with banco_origem.lock_transferencias_nac:
+                banco_origem.transferencias_nac += 1
+                conta_origem.withdraw(transaction.amount)
+                conta_destino.deposit(transaction.amount)
+        else:
+            with banco_origem.lock_transferencias_int:
+                banco_origem.transferencias_int += 1
+                conta_origem.withdraw(transaction.amount)
+                conta_destino.deposit(transaction.amount)
+           
 
         LOGGER.info(f"PaymentProcessor {self._id} do Banco {self.bank._id} iniciando processamento da Transaction {transaction._id}!")
         
         # NÃO REMOVA ESSE SLEEP!
         # Ele simula uma latência de processamento para a transação.
-        time.sleep(0.3 * time_unit)
+        time.sleep(3 * time_unit)
 
         transaction.set_status(TransactionStatus.SUCCESSFUL)
         return transaction.status

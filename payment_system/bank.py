@@ -44,7 +44,7 @@ class Bank():
         self._id                = _id
         self.currency           = currency
         self.reserves           = CurrencyReserves()
-        self.operating          = False
+        self.operating          = True
         self.accounts           = []
         self.transaction_queue  = []
 
@@ -53,7 +53,9 @@ class Bank():
         self.transacao_na_fila  = Condition(self.lock)
 
         # bank info
+        self.lock_transferencias_nac = Lock()
         self.lock_transferencias_int = Lock()
+
         self.transferencias_nac = 0 #proteger essas áreas do código na hora de incrementar
         self.transferencias_int = 0
 
@@ -86,5 +88,16 @@ class Bank():
         """
         # TODO: IMPLEMENTE AS MODIFICAÇÕES, SE NECESSÁRIAS, NESTE MÉTODO!
 
+        saldo_clientes = []
+
+        LOGGER.info(f"===========================================")
         LOGGER.info(f"Estatísticas do Banco Nacional {self._id}:")
-        LOGGER.info(f"...")
+        LOGGER.info(f"Saldo das moedas no Bancos: USD:{self.reserves.USD.balance}, BRL: {self.reserves.BRL.balance}, EUR: {self.reserves.EUR.balance}, CHB: {self.reserves.CHF.balance}, JPY: {self.reserves.JPY.balance}, GBP: {self.reserves.GBP.balance}")
+        LOGGER.info(f"{self.transferencias_nac} e {self.transferencias_int} transferências nacionais e internacionas foram realizadas, respectivamente")
+        LOGGER.info(f"O banco tem {len(self.accounts)} contas bancárias abertas")     
+        for account in self.accounts:
+            saldo_clientes.append(account.balance)
+        LOGGER.info(f"saldo dos clientes: {saldo_clientes}")
+        LOGGER.info(f"o Banco teve {11111111} de lucro")
+        LOGGER.info(f"===========================================")
+

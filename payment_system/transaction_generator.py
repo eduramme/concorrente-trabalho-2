@@ -44,25 +44,25 @@ class TransactionGenerator(Thread):
 
         LOGGER.info(f"Inicializado TransactionGenerator para o Banco Nacional {self.bank._id}!")
 
-        operating = banks[self.bank._id].operating
-        lock = banks[self.bank._id].lock
-        transacao_na_fila = banks[self.bank._id].transacao_na_fila
+        operating = self.bank.operating
+        lock = self.bank.lock
+        transacao_na_fila = self.bank.transacao_na_fila
 
 
         i = 0
-        while True:
-            origin = (self.bank._id, self._id)
+        while operating:
+            origin = (self.bank._id, randint(0, 9))
             destination_bank = randint(0, 5)
-            destination = (destination_bank, randint(0, 100))
-            amount = randint(100, 1000000)
+            destination = (destination_bank, randint(0, 9))
+            amount = 10
             new_transaction = Transaction(i, origin, destination, amount, currency=Currency(destination_bank+1))
+            # print(i)
             with lock:
                 # coloca na fila das transações
-                banks[self.bank._id].transaction_queue.append(new_transaction)
+                self.bank.transaction_queue.append(new_transaction)
                 transacao_na_fila.notify()
-            i=+1
-            time.sleep(0.3 * time_unit)
-            print(f"================ Transação gerada: {self.bank._id} ================")
+            i+=1
+            time.sleep(0.2 * time_unit)
 
         LOGGER.info(f"O TransactionGenerator {self._id} do banco {self.bank._id} foi finalizado.")
 
