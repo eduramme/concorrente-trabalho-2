@@ -40,14 +40,12 @@ class TransactionGenerator(Thread):
         Esse método deverá gerar transacões aleatórias enquanto o banco (self._bank_id)
         estiver em operação.
         """
-        # TODO: IMPLEMENTE AS MODIFICAÇÕES, SE NECESSÁRIAS, NESTE MÉTODO!
 
         LOGGER.info(f"Inicializado TransactionGenerator para o Banco Nacional {self.bank._id}!")
 
         operating = self.bank.operating
         lock = self.bank.lock
         transacao_na_fila = self.bank.transacao_na_fila
-
 
         i = 0
         while operating:

@@ -68,10 +68,15 @@ if __name__ == "__main__":
     # Inicializa gerador de transações e processadores de pagamentos para os Bancos Nacionais:
     for i, bank in enumerate(banks):
         # Inicializa um TransactionGenerator thread por banco:
-        TransactionGenerator(_id=i, bank=bank).start()
+        generator = TransactionGenerator(_id=i, bank=bank)
+        generator.start()
         # Inicializa um PaymentProcessor thread por banco.
         # Sua solução completa deverá funcionar corretamente com múltiplos PaymentProcessor threads para cada banco.
-        PaymentProcessor(_id=i, bank=bank).start()
+        processor = PaymentProcessor(_id=i, bank=bank)
+        processor.start()
+
+        bank.transaction_generators.append(generator)
+        bank.payment_processors.append(processor)
         
     # Enquanto o tempo total de simuação não for atingido:
     while t < total_time:
@@ -82,27 +87,32 @@ if __name__ == "__main__":
         # Atualiza a variável tempo considerando o intervalo de criação dos clientes:
         t += dt
 
+    ending_time = datetime.now()
+
     for bank in banks:
         bank.operating = False
     
-    ending_time = datetime.now()
-
-    # @TODO: Finalizar todas as threads        
+    # Finaliza todas as threads    
+    for bank in banks:
+        for processor in bank.payment_processors:
+            processor.join()
 
     # Termina simulação. Após esse print somente dados devem ser printados no console.
     LOGGER.info(f"A simulação chegou ao fim!\n")
-     # status do banco
+
     for bank in banks:
         bank.info()
 
+    # calcula transações não processadas e tempo médio de espera delas
     transações_não_processadas = 0
     total_wait_time_seconds = 0
 
     for bank in banks:
         transações_não_processadas += len(bank.transaction_queue)
         for transaction in bank.transaction_queue:
-            total_wait_time_seconds += ((ending_time - transaction.created_at).seconds - 1) #parece que ele arredonda pra cima
-            
+            total_wait_time_seconds += ((ending_time - transaction.created_at).seconds - 1) 
+
     average_wait_time = total_wait_time_seconds / transações_não_processadas
+
     LOGGER.info(f"Tempo médio de espera: {average_wait_time} segundos")
     LOGGER.info(f"Número total de transações não processadas: {transações_não_processadas}\n")

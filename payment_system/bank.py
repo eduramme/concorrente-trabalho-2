@@ -48,6 +48,9 @@ class Bank():
         self.accounts           = []
         self.transaction_queue  = []
 
+        self.payment_processors = []
+        self.transaction_generators = []
+        
         # lock for queues
         self.lock               = Lock()
         self.transacao_na_fila  = Condition(self.lock)

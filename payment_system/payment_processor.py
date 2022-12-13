@@ -42,7 +42,6 @@ class PaymentProcessor(Thread):
         utilizando o método self.process_transaction(self, transaction: Transaction).
         Ele não deve ser finalizado prematuramente (antes do banco realmente fechar).
         """
-        # TODO: IMPLEMENTE/MODIFIQUE O CÓDIGO NECESSÁRIO ABAIXO !
 
         LOGGER.info(f"Inicializado o PaymentProcessor {self._id} do Banco {self.bank._id}!")
         queue = self.bank.transaction_queue
@@ -52,7 +51,7 @@ class PaymentProcessor(Thread):
         while self.bank.operating:
             transaction = None
             try:
-                with lock: #Critério 1
+                with lock:
                     if (queue == []):
                         print("Fila vazia")
                         transacao_na_fila.wait()
@@ -62,7 +61,6 @@ class PaymentProcessor(Thread):
                 LOGGER.error(f"Falha em PaymentProcessor.run(): {err}")
             else:
                 self.process_transaction(transaction)
-            # time.sleep(3 * time_unit)  # Remova esse sleep após implementar sua solução!
 
         LOGGER.info(f"O PaymentProcessor {self._id} do banco {self.bank._id} foi finalizado.")
 
@@ -77,7 +75,6 @@ class PaymentProcessor(Thread):
         """
         
         # TODO: Proteger cada conta com Lock / checkar a ordem desses locks para evitar condição de corrida
-
         conta_origem = banks[transaction.origin[0]].accounts[transaction.origin[1]]
         banco_origem = banks[transaction.origin[0]]
         conta_destino = banks[transaction.destination[0]].accounts[transaction.destination[1]]
