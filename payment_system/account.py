@@ -88,7 +88,7 @@ class Account:
                 if self.overdraft_limit >= overdrafted_amount:
                     self.balance -= amount
                     taxa = amount * 0.05 #calcula a taxa do banco
-                    print(" ======================================================================================== ==================================================== OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOVEEEEEEEEEEEERDRAAAAAAAAAAAAAAAFTTTT")
+                    print("OVERDRAFT")
                     banks[self._bank_id].reserves.USD.deposit(taxa) #deposita a taxa na conta do banco
                     LOGGER.info(f"withdraw({amount}) successful with overdraft!")
                     return True
@@ -111,4 +111,3 @@ class CurrencyReserves:
     JPY: Account = Account(_id=4, _bank_id=0, currency=Currency.JPY)
     CHF: Account = Account(_id=5, _bank_id=0, currency=Currency.CHF)
     BRL: Account = Account(_id=6, _bank_id=0, currency=Currency.BRL)
-    BAL: Account = Account(_id=6, _bank_id=0, currency=Currency.BRL)

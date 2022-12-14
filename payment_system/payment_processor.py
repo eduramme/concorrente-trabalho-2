@@ -4,7 +4,7 @@ from threading import Thread
 from globals import *
 from payment_system.bank import Bank
 from utils.transaction import Transaction, TransactionStatus
-from utils.currency import get_exchange_rate
+from utils.currency import get_exchange_rate, Currency
 from utils.logger import LOGGER
 
 
@@ -80,15 +80,45 @@ class PaymentProcessor(Thread):
         conta_destino = banks[transaction.destination[0]].accounts[transaction.destination[1]]
 
         if (conta_origem.currency == conta_destino.currency):
+            conta_origem.withdraw(transaction.amount)
+            conta_destino.deposit(transaction.amount)
             with banco_origem.lock_transferencias_nac:
                 banco_origem.transferencias_nac += 1
-                conta_origem.withdraw(transaction.amount)
-                conta_destino.deposit(transaction.amount)
         else:
+            # exchange_rate = get_exchange_rate(conta_origem.currency, conta_destino.currency)
+
+            conta_origem.withdraw(transaction.amount)
+            
+            # if conta_origem.currency == Currency.USD:
+            #     origem_curr = self.bank.reserves.USD
+            # elif conta_origem.currency == Currency.EUR:
+            #     origem_curr = self.bank.reserves.EUR
+            # elif conta_origem.currency == Currency.GBP:
+            #     origem_curr = self.bank.reserves.GBP
+            # elif conta_origem.currency == Currency.JPY:
+            #     origem_curr = self.bank.reserves.JPY
+            # elif conta_origem.currency == Currency.CHF:
+            #     origem_curr = self.bank.reserves.CHF
+                
+            # origem_curr.deposit(transaction.amount * exchange_rate)
+
+            # if conta_destino.currency == Currency.USD:
+            #     destino_curr = self.bank.reserves.USD
+            # elif conta_destino.currency == Currency.EUR:
+            #     destino_curr = self.bank.reserves.EUR
+            # elif conta_destino.currency == Currency.GBP:
+            #     destino_curr = self.bank.reserves.GBP
+            # elif conta_destino.currency == Currency.JPY:
+            #     destino_curr = self.bank.reserves.JPY
+            # elif conta_destino.currency == Currency.CHF:
+            #     destino_curr = self.bank.reserves.CHF
+
+            # destino_curr.withdraw(transaction.amount)
+
+            conta_destino.deposit(transaction.amount)
+
             with banco_origem.lock_transferencias_int:
                 banco_origem.transferencias_int += 1
-                conta_origem.withdraw(transaction.amount)
-                conta_destino.deposit(transaction.amount)
            
 
         LOGGER.info(f"PaymentProcessor {self._id} do Banco {self.bank._id} iniciando processamento da Transaction {transaction._id}!")
